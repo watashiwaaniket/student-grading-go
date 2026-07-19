@@ -1,5 +1,13 @@
 package main
 
+import (
+	"encoding/csv"
+	"io"
+	"log"
+	"os"
+	"strconv"
+)
+
 type Grade string
 
 const (
@@ -21,7 +29,51 @@ type studentStat struct {
 }
 
 func parseCSV(filePath string) []student {
-	return nil
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatalf("Failed to open the file: %s", err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	var students []student
+
+	_, err = reader.Read()
+	if err != nil {
+		log.Fatalf("error reading row: %s", err)
+	}
+
+	for {
+		row, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("error reading row: %s", err)
+		}
+		if len(row) < 7 {
+			log.Printf("Skipping malformed row: %s", row)
+			continue
+		}
+
+		t1, _ := strconv.Atoi(row[3])
+		t2, _ := strconv.Atoi(row[4])
+		t3, _ := strconv.Atoi(row[5])
+		t4, _ := strconv.Atoi(row[6])
+
+		stu := student{
+			firstName:  row[0],
+			lastName:   row[1],
+			university: row[2],
+			test1Score: t1,
+			test2Score: t2,
+			test3Score: t3,
+			test4Score: t4,
+		}
+
+		students = append(students, stu)
+	}
+	return students
 }
 
 func calculateGrade(students []student) []studentStat {
